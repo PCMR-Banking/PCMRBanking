@@ -1,4 +1,4 @@
-# PCMRBanking
+# PCMR Banking INC
 PCMR is branching out into the world of money. With our new bank we will conquere the gaming market.
 We have good prices on loans for pc parts and you can get a refund for every non-apple device you buy.
 
