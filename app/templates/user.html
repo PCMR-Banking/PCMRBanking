@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1 class="display-4 text-center mb-5">{% block title %}My profile{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+  <div class="row justify-content-between">
+    
+    <div class="col-md-6 float-left">
+        {{}}
+        <h5 class="display-6" style="font-size: 1.5rem;">Velkommen, <span style="text-transform: uppercase;">{{ user.username }}</span></h5>
+        {% if user.last_seen %}<p>Last seen on: {{ user.last_seen }}</p>{% endif %}
+    </div>
+    
+    <div class="col-md-2 float-right">
+        {% if user == current_user %}
+        <a class="btn btn-light" style="border-radius: 0.5rem;" id="MHsinKnapp" href="{{ url_for('edit_profile') }}" role="button">Edit profile</a>
+        {% endif %}
+    </div>
+  </div>
+    <hr class="my-3">
+<div class="row justify-content-between">
+    
+    <form class="col-md-6 mx-auto" method="post">
+        <div class="mb-3">
+            <img src="{{ user.avatar(128) }}">
+        </div>
+        <div class="mb-3">
+            <label for="changeFirstName" class="form-label" >First Name</label>
+            <input readonly type="text" class="form-control readonlyfc" id="changeFirstName" name="changeFirstName" placeholder="{{ user.first_name  }}">
+        </div>
+        <div class="mb-3">
+            <label for="changeLastName" class="form-label" >Last Name</label>
+            <input readonly type="text" class="form-control readonlyfc" id="changeLastName" name="changeLastName" placeholder="{{ user.last_name }}">
+        </div>
+        <div class="mb-3">
+            <label for="changeEmailAddress" class="form-label">Email address</label>
+            <input readonly type="email" class="form-control readonlyfc" name="changeEmailAddress" id="changeEmailAddress" aria-describedby="emailHelp" placeholder="{{ user.username }}">
+            <div id="emailHelp" class="form-text">We will never share your email with anyone else.</div>
+        </div>
+        <div class="mb-3">
+            <label for="changeCellphone" class="form-label" >Cellphone</label>
+            <input readonly type="tel" class="form-control readonlyfc" id="changeCellphone" name="changeCellphone" placeholder="{{ user.cellphone }}">
+        </div>
+        <!-- <div class="mb-3" hidden>
+            <label for="changePassword" class="form-label">Password</label>
+            <input readonly type="password" class="form-control" name="changePassword" id="changePassword" required>
+        </div>
+        <div class="mb-3" hidden>
+            <label for="confirmChangePassword" class="form-label">Confirm password</label>
+            <input readonly type="password" class="form-control" name="confirmChangePassword" id="confirmChangePassword" required>
+        </div> -->
+        <button type="reset" class="btn btn-secondary offset-9" value="Reset" id="resetbtn" onclick="disableTxt()" hidden>Reset</button>
+        <button type="submit" class="btn btn-primary" id="MHsinKnapp2" hidden>Submit</button>
+    </form>
+</div>
+{% endblock %}

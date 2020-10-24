@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h1 class="display-5 text-center mb-5">{% block title %}PCMR Secure Bank INC{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-5">
+  <div id="carouselExampleSlidesOnly" class="carousel slide carousel-fade" data-ride="carousel">
+    <ol class="carousel-indicators">
+      <li data-target="#carouselExampleCaptions" data-slide-to="0" class="active"></li>
+      <li data-target="#carouselExampleCaptions" data-slide-to="1"></li>
+      <li data-target="#carouselExampleCaptions" data-slide-to="2"></li>
+    </ol>
+    <div class="carousel-inner">
+      <div class="carousel-item active">
+        <img src="{{ url_for('static', filename='pexels-pixabay-53621.jpg') }}" class="d-block w-100" alt="...">
+        <div class="carousel-caption d-none d-md-block">
+          <h5>Excellent control</h5>
+          <p>With us you will never lose control over your economy!</p>
+        </div>
+      </div>
+      <div class="carousel-item">
+        <img src="{{ url_for('static', filename='pexels-karolina-grabowska-4475524.jpg') }}" class="d-block w-100" alt="...">
+        <div class="carousel-caption d-none d-md-block">
+          <h5>Best saving solutions</h5>
+          <p>We got excellent tools for you to start saving. You will have more cash in no time.</p>
+        </div>
+      </div>
+      <div class="carousel-item">
+        <img src="{{ url_for('static', filename='pexels-cottonbro-3943741.jpg') }}" class="d-block w-100" alt="...">
+        <div class="carousel-caption d-none d-md-block">
+          <h5>Can't wait?</h5>
+          <p>We also got credit cards which can help you buy that iPad you always wanted!</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row justify-content-center">
+
+  <div class="card col-3" style="width: 18rem; border-color: white;">
+    <i class="fab fa-cc-mastercard text-center" style="font-size: 8rem;"></i>
+    <div class="card-body">
+      <h5 class="card-title">Credit Cards</h5>
+      <p class="card-text">Ever wanted a credit card? We can hook you up with a range of different credit cards that suit your needs.</p>
+    </div> 
+    <div class="card-footer" style="background-color: white;">
+      <a href="#" class="btn btn-primary">Go somewhere</a>
+    </div>
+  </div>
+
+  <div class="card col-3" style="width: 18rem; border-color: white;">
+    <i class="fas fa-home text-center" style="font-size: 8rem;"></i>
+    <div class="card-body">
+      <h5 class="card-title">Loans</h5>
+      <p class="card-text">We are currently in the works on getting our loans solution up and running. We can on the other hand promsie excellent rates and service!</p>
+    </div>
+    <div class="card-footer" style="background-color: white;">
+      <a href="#" class="btn btn-primary">Go somewhere</a>
+    </div>
+  </div>
+
+  <div class="card col-3" style="width: 18rem; border-color: white;">
+    <i class="fas fa-chart-line text-center" style="font-size: 8rem;"></i>
+    <div class="card-body">
+      <h5 class="card-title">Stocks</h5>
+      <p class="card-text">Keep an eye on your favorite stocks using our stock market page.</p>
+    </div>
+    <div class="card-footer" style="background-color: white;">
+      <a href="#" class="btn btn-primary">Go somewhere</a>
+    </div>
+  </div>
+
+  <div class="card col-3" style="width: 18rem; border-color: white;">
+    <i class="fas fa-user-shield text-center" style="font-size: 8rem;"></i>
+    <div class="card-body">
+      <h5 class="card-title">Safe accounts</h5>
+      <p class="card-text">Need to store your money somewhere safe? We can offer secure accounts with excellent service included. Let us get you set up!</p>
+    </div>
+    <div class="card-footer" style="background-color: white;">
+      <a href="#" class="btn btn-primary">Go somewhere</a>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
