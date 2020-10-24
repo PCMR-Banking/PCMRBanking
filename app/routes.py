@@ -1,4 +1,4 @@
-from flask import render_template, flash, redirect, url_for, request
+from flask import render_template, flash, redirect, url_for, request, session
 from flask_login.utils import logout_user
 from app import app, db
 from app.forms import LoginForm, RegistrationForm, EditProfileForm
@@ -6,6 +6,9 @@ from flask_login import current_user, login_user, login_required
 from app.models import User
 from werkzeug.urls import url_parse
 from datetime import datetime
+import pyqrcode
+from io import BytesIO, StringIO
+from os import abort
 
 @app.route('/')
 @app.route('/index')
@@ -19,9 +22,11 @@ def login():
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
-        if user is None or not user.check_password(form.password.data):
-            flash('Invaild username or password')
+        if user is None or not user.check_password(form.password.data) or \
+            not user.verify_totp(form.token.data):
+            flash('Invaild username, password or token')
             return redirect(url_for('login'))
+
         login_user(user, remember=form.remember_me.data)
         next_page = request.args.get('next')
         if not next_page or url_parse(next_page).netloc != '':
@@ -40,12 +45,19 @@ def register():
         return redirect(url_for('index'))
     form = RegistrationForm()
     if form.validate_on_submit():
+        user = User.query.filter_by(username=form.username.data).first()
+        if user is not None:
+            flash('Username already exists.')
+            return redirect(url_for('register'))
+            
         user = User(username=form.username.data)
         user.set_password(form.password.data)
         db.session.add(user)
         db.session.commit()
-        flash('Congratulations, you are now a registered user!')
-        return redirect(url_for('login'))
+
+        # redirect to the two-factor auth page, passing username in session
+        session['username'] = user.username
+        return redirect(url_for('two_factor_setup'))
     return render_template('register.html', title='Register', form=form)
 
 @app.route('/user')
@@ -79,6 +91,43 @@ def edit_profile():
         form.cellphone.data = current_user.cellphone
     return render_template('edit_profile.html', title='Edit Profile',
                            form=form)
+
+
+@app.route('/twofactor')
+def two_factor_setup():
+    if 'username' not in session:
+        return redirect(url_for('index'))
+    user = User.query.filter_by(username=session['username']).first()
+    if user is None:
+        return redirect(url_for('index'))
+    # since this page contains the sensitive qrcode, make sure the browser
+    # does not cache it
+    return render_template('two-factor-setup.html'), 200, {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'}
+
+
+@app.route('/qrcode')
+def qrcode():
+    if 'username' not in session:
+        abort(404)
+    user = User.query.filter_by(username=session['username']).first()
+    if user is None:
+        abort(404)
+
+    # for added security, remove username from session
+    del session['username']
+
+    # render qrcode for FreeTOTP
+    url = pyqrcode.create(user.get_totp_uri())
+    stream = BytesIO()
+    url.svg(stream, scale=3)
+    return stream.getvalue(), 200, {
+        'Content-Type': 'image/svg+xml',
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'}
 
 # @app.route('/user/<username>')
 # @login_required

@@ -48,7 +48,7 @@
             <a class="btn btn-secondary ml-auto" href="{{ url_for('register') }}" role="button">Register</a>
             <a class="btn btn-primary ml-2" href="{{ url_for('login') }}" role="button">Log In</a>
         {% else %}
-            <a class="ml-auto" href="{{ url_for('user', username=current_user.username) }}">Profile</a>
+            <a class="ml-auto" href="{{ url_for('user') }}">Profile</a>
             <a class="btn btn-secondary ml-2" href="{{ url_for('logout') }}" role="button">Log out</a>
             <a class="btn btn-outline-primary ml-2" href="#" role="button">Nettbank</a>
         {% endif %}

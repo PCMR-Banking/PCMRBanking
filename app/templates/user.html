@@ -6,12 +6,17 @@
 
 {% block content %}
   <div class="row justify-content-between">
-    
+    {% if user.first_name %}
     <div class="col-md-6 float-left">
-        {{}}
+        <h5 class="display-6" style="font-size: 1.5rem;">Velkommen <span style="text-transform: uppercase;">{{ user.last_name }}</span>, <span style="text-transform: uppercase;">{{ user.first_name }}</span></h5>
+        {% if user.last_seen %}<p>Last seen on: {{ user.last_seen }}</p>{% endif %}
+    </div>
+    {% else %}
+    <div class="col-md-6 float-left">
         <h5 class="display-6" style="font-size: 1.5rem;">Velkommen, <span style="text-transform: uppercase;">{{ user.username }}</span></h5>
         {% if user.last_seen %}<p>Last seen on: {{ user.last_seen }}</p>{% endif %}
     </div>
+    {% endif %}
     
     <div class="col-md-2 float-right">
         {% if user == current_user %}
