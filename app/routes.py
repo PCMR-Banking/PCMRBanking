@@ -1,9 +1,9 @@
-from flask import render_template, flash, redirect, url_for, request, session
+from flask import render_template, flash, redirect, url_for, request, session, jsonify
 from flask_login.utils import logout_user
 from app import app, db
-from app.forms import LoginForm, RegistrationForm, EditProfileForm
+from app.forms import LoginForm, RegistrationForm, EditProfileForm, AccountForm, EditAccountForm
 from flask_login import current_user, login_user, login_required
-from app.models import User
+from app.models import User, Accounts
 from werkzeug.urls import url_parse
 from datetime import datetime
 import pyqrcode
@@ -11,7 +11,6 @@ from io import BytesIO, StringIO
 from os import abort
 
 @app.route('/')
-@app.route('/index')
 def index():
     return render_template('index.html')
 
@@ -26,7 +25,8 @@ def login():
             not user.verify_totp(form.token.data):
             flash('Invaild username, password or token')
             return redirect(url_for('login'))
-
+        if user.deleted:
+            abort(404)
         login_user(user, remember=form.remember_me.data)
         next_page = request.args.get('next')
         if not next_page or url_parse(next_page).netloc != '':
@@ -66,6 +66,23 @@ def user():
     user = current_user
     return render_template('user.html', user=user)
 
+@app.route('/user', methods=['DELETE'])
+def delete_user(current_user):
+    user = User.query.get_or_404(current_user.ID)
+    accounts = Accounts.query.filter_by(ownerID=user.ID).all()
+    if user.deleted:
+        abort(404)
+    user.deleted = True
+    db.session.commit()
+    return '', 204
+
+@app.route('/user', methods=['GET'])
+def get_user(current_user):
+    user = User.query.get_or_404(current_user.ID)
+    if user.deleted:
+        abort(404)
+    return jsonify(user.to_dict())
+
 @app.before_request
 def before_request():
     if current_user.is_authenticated:
@@ -75,7 +92,7 @@ def before_request():
 @app.route('/edit_profile', methods=['GET', 'POST'])
 @login_required
 def edit_profile():
-    form = EditProfileForm()
+    form = EditProfileForm(current_user.username)
     if form.validate_on_submit():
         current_user.username = form.username.data
         current_user.first_name = form.first_name.data
@@ -129,12 +146,130 @@ def qrcode():
         'Pragma': 'no-cache',
         'Expires': '0'}
 
-# @app.route('/user/<username>')
+@app.route('/about')
+def about():
+    return render_template('about.html')
+
+@app.route('/credit')
+def credit():
+    return render_template('Credit.html')
+
+@app.route('/contactus')
+def contactus():
+    return render_template('/contactus.html')
+    
+@app.route('/stocks')
+def stocks():
+    return render_template('stocks.html')
+
+@app.route('/dashboard', methods=['GET', 'POST'])
+@login_required
+def dashboard():
+    user = current_user
+    if user is None or user.deleted:
+        abort(404)
+    form = AccountForm()
+    if form.validate_on_submit():
+        account = Accounts(owner=current_user, AccountName=form.AccountName.data, AccountType=form.AccountType.data, \
+            AccountBalance=form.AccountBalance.data)
+        db.session.add(account)
+        db.session.commit()
+        flash('Your new account is activated!')
+        accounts = Accounts.query.filter_by(ownerID=user.ID).all()
+        return redirect(url_for('dashboard'))
+    # accounts = [
+    #     {
+    #         'ID': 13376942069,
+    #         'owner': {'username': 'alha@tester.no'},
+    #         'AccountName': 'Big Brain',
+    #         'AccountBalance': 500,
+    #         'AccountType': "Standard Account"
+    #     },
+    #     {
+    #         'ID': 13376942070,
+    #         'owner': {'username': 'alha@tester.no'},
+    #         'AccountName': 'Smol PP',
+    #         'AccountBalance': 500,
+    #         'AccountType': "Standard Account"
+    #     },
+    # ]
+
+    if request.method == 'POST':
+        if 'accID' in request.form:
+            accID = int(request.form.get('accID'))
+            print(type(accID))
+            accounts = Accounts.query.filter_by(ID=accID).first()
+            session['editAccID'] = accID
+            return redirect(url_for('edit_acc'))
+        elif 'from' in request.form:
+            fromAccID = int(request.form.get('from'))
+            fromAccInfo = Accounts.query.filter_by(ID=fromAccID).first()
+            Amount = int(request.form['money'])
+            if fromAccInfo.AccountBalance < Amount:
+                flash("U don't have that cash man")
+            else:
+                toAcc = request.form.get('toAcc')
+                toAccInfo = Accounts.query.filter_by(ID=toAcc).first()
+                fromAccInfo.AccountBalance -= Amount
+                toAccInfo.AccountBalance += Amount
+                db.session.commit()
+                flash('Transfer successful!')
+
+        return redirect(url_for('dashboard'))
+        # AccountName = request.form['AccountName']
+        # StartingAmount = request.form['money']
+        # AccountType = request.form.get('accounttypes')
+
+    accounts = Accounts.query.filter_by(ownerID=user.ID).all()
+    return render_template('dashboard.html', user=user, accounts=accounts, form=form)
+
+
+# @app.route('/edit_acc', methods=['GET', 'POST'])
 # @login_required
-# def user(username):
-#     user = User.query.filter_by(username=username).first_or_404()
-#     posts = [
-#         {'author': user, 'body': 'Test post #1'},
-#         {'author': user, 'body': 'Test post #2'}
+# def edit_acc():
+#     user = current_user
+
+
+@app.route('/edit_acc', methods=['GET', 'POST'])
+@login_required
+def edit_acc():
+    account = Accounts.query.filter_by(ID=session['editAccID']).first()
+    print(account.ID)
+    print(account.AccountName)
+    form = EditAccountForm()
+    if form.validate_on_submit():
+        account.AccountName = form.AccountName.data
+        account.AccountType = form.AccountType.data
+        db.session.commit()
+        flash('Your changes have been saved.')
+        return redirect(url_for('edit_acc'))
+    elif request.method == 'GET':
+        form.AccountName.data = account.AccountName
+        form.AccountType.data = account.AccountType
+    return render_template('edit_acc.html', title='Edit Account',
+                           form=form)
+
+
+
+# @app.route('/dashboard', methods=['GET', 'POST'])
+# @login_required
+# def index():
+#     form = PostForm()
+#     if form.validate_on_submit():
+#         account = Accounts(body=form.post.data, author=current_user)
+#         db.session.add(account)
+#         db.session.commit()
+#         flash('Your post is now live!')
+#         return redirect(url_for('index'))
+#     accounts = [
+#         {
+#             'author': {'username': 'alha@tester.no'},
+#             'body': 'Beautiful day in Portland!'
+#         },
+#         {
+#             'author': {'username': 'Susan'},
+#             'body': 'The Avengers movie was so cool!'
+#         }
 #     ]
-#     return render_template('user.html', user=user, posts=posts)
+#     return render_template("dashboard.html", form=form,
+#                            accounts=accounts)

@@ -1,0 +1,257 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1 class="display-4 text-center">{% block title %}Dashboard{% endblock %}</h1>
+  {% if user.first_name %}
+    <div class="mb-5">
+        <h5 class="display-6" style="font-size: 1.5rem;">Velkommen <span style="font-style: italic;">{{ user.last_name + ', ' + user.first_name}}</span></h5>
+    </div>
+    {% else %}
+    <div class="mb-5">
+        <h5 class="display-6" style="font-size: 1.5rem;">Velkommen, <span style="text-transform: uppercase;">{{ user.username }}</span></h5>
+    </div>
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-around mb-0">
+    <div class="col-1">
+        <i class="fas fa-plus-square text-center" style="font-size: 4rem;" type="button" data-toggle="modal" data-target="#exampleModal"></i>
+    </div>
+
+    <div class="col-1">
+        <i class="fas fa-edit text-center" style="font-size: 4rem;" type="button" data-toggle="modal" data-target="#editModal"></i>
+    </div>
+
+    <div class="col-1">
+        <i class="fas fa-donate text-center" style="font-size: 4rem;" type="button" data-toggle="modal" data-target="#transferModal"></i>
+    </div>
+
+    <div class="col-1">
+        <i class="fas fa-trash text-center" style="font-size: 4rem;" type="button" data-toggle="modal" data-target="#deleteModal"></i>
+    </div>
+</div>
+
+  <div class="row mb-4">
+    <div class="col-2">
+      <h5 class="">Bank accounts:</h5>
+    </div>
+    <hr class="mt-2" style="color: black;">
+  </div>
+  
+  {% for a in accounts %}
+    <div class="row">
+      <p class="col-2">{{ a.ID }}</p>
+      <h5 class="col-4" style="font-style: italic;">{{ a.AccountName }}</h5>
+      <div class="col-4">
+        <p>{{ "{:,.2f} NOK".format(a.AccountBalance) }}</p>
+      </div>
+      <div class="col-2">
+        <button type="button" class="btn btn-light" data-toggle="tooltip" data-placement="top" title="Edit name of account"><i class="fas fa-edit"></i></button>
+        <button type="button" class="btn btn-light" data-toggle="tooltip" data-placement="top" title="Transfer money from account"><i class="fas fa-file-invoice-dollar"></i></button>
+        <button type="button" class="btn btn-light" data-toggle="tooltip" data-placement="top" title="Delete account"><i class="fas fa-trash"></i></button>
+      </div>
+    </div>
+    {% if not loop.last %}
+      <hr>
+    {% endif %}
+  {% endfor %}
+
+
+
+  <!-- Modal
+  <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLabel">New Account:</h5>
+          <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form role="form" id="NewAcc" method="post">
+            <div class="row justify-content-center">
+              <div class="col-6 mb-3">
+                <label for="AccountName" class="form-label" >Account Name</label>
+                <input type="text" class="form-control" id="AccountName" name="AccountName" placeholder="Standard Account">
+              </div>
+            </div>
+            <div class="row justify-content-center">
+              <div class="col-6 mb-3">
+                  <label for="money" class="form-label" >Starting amount</label>
+                  <input type="text" class="form-control" id="money" name="money" placeholder="100 000,-">
+              </div>
+            </div>
+            <div class="row justify-content-center">
+              <div class="form-group col-6 mb-2">
+                <label for="accounttypes">Account Type</label>
+                <select class="form-control" id="accounttypes" name="accounttypes">
+                  <option name="Standard Account" value="Standard Account">Standard Account</option>
+                  <option name="Savings Account" value="Savings Account">Savings Account</option>
+                  <option name="Stocks Account" value="Stocks Account">Stocks Account</option>
+                  <option name="Gamer Account" value="Gamer Account">Gamer Account</option>
+                </select>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <button type="submit" form="NewAcc" class="btn btn-primary">Submit</button>
+        </div>
+      </div>
+    </div>
+  </div> -->
+
+  <!-- New Account Modal -->
+  <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLabel">New Account:</h5>
+          <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form role="form" id="NewAcc" method="post">
+              {{ form.hidden_tag() }}
+              <p>
+                {{ form.AccountName.label }}<br>
+                {{ form.AccountName(size=30) }}<br>
+                {% for error in form.AccountName.errors %}
+                <span style="color: red;">[{{ error }}]</span>
+                {% endfor %}
+              </p>
+              <p>
+                {{ form.AccountBalance.label }}<br>
+                {{ form.AccountBalance(size=30) }}<br>
+                {% for error in form.AccountBalance.errors %}
+                <span style="color: red;">[{{ error }}]</span>
+                {% endfor %}
+              </p>
+              <p>
+                {{ form.AccountType.label }}<br>
+                {{ form.AccountType(size=1) }}<br>
+                {% for error in form.AccountType.errors %}
+                <span style="color: red;">[{{ error }}]</span>
+                {% endfor %}
+              </p>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <button type="submit" form="NewAcc" class="btn btn-primary">Submit</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Account Modal -->
+  <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editModalLabel">Edit Account:</h5>
+          <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            <form role="form" id="editAcc" method="post">
+                <label for="accID">Choose Account</label>
+                <select class="form-control custom-select custom-select-lg mb-3" id="accID" name="accID">
+                    {% for a in accounts %}
+                    <option name="{{ a.ID }}" value="{{ a.ID }}">{{ a.ID }} | {{ a.AccountName }}</option>
+                    {% endfor %}
+                </select>
+            </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <button type="submit" form="editAcc" class="btn btn-primary">Select</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Transfer Account Modal -->
+  <div class="modal fade" id="transferModal" tabindex="-1" aria-labelledby="transferModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="transferModalLabel">Transfer:</h5>
+          <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form role="form" id="transfer" method="post">
+              {{ form.hidden_tag() }}
+            <div class="row justify-content-center">
+            <div class="col-6 mb-2">
+                <label for="from">From account:</label>
+                <select class="form-control custom-select custom-select-lg mb-3" id="from" name="from">
+                    {% for a in accounts %}
+                    <option name="{{ a.ID }}" value="{{ a.ID }}">{{ a.ID }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="row justify-content-center">
+                <div class="col-6 mb-3">
+                    <label for="AccountName" class="form-label" >To Account</label>
+                    <input type="text" class="form-control" id="toAcc" name="toAcc" placeholder="13376942069">
+                </div>
+            </div>
+            <div class="row justify-content-center">
+                <div class="col-6 mb-3">
+                    <label for="money" class="form-label" >Amount</label>
+                    <input type="text" class="form-control" id="money" name="money" placeholder="100 000,-">
+                </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+          <button type="submit" form="transfer" class="btn btn-primary">Transfer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Account Modal -->
+  <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="deleteModalLabel">Delete Account:</h5>
+          <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form role="form" id="delete" method="post">
+              {{ form.hidden_tag() }}
+              <p>
+                {{ form.AccountName.label }}<br>
+                {{ form.AccountName(size=30) }}<br>
+                {% for error in form.AccountName.errors %}
+                <span style="color: red;">[{{ error }}]</span>
+                {% endfor %}
+              </p>
+              <p>
+                {{ form.AccountBalance.label }}<br>
+                {{ form.AccountBalance(size=30) }}<br>
+                {% for error in form.AccountBalance.errors %}
+                <span style="color: red;">[{{ error }}]</span>
+                {% endfor %}
+              </p>
+              <p>
+                {{ form.AccountType.label }}<br>
+                {{ form.AccountType(size=1) }}<br>
+                {% for error in form.AccountType.errors %}
+                <span style="color: red;">[{{ error }}]</span>
+                {% endfor %}
+              </p>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancer</button>
+          <button type="submit" form="delete" class="btn btn-primary">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+{% endblock %}

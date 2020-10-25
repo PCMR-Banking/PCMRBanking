@@ -1,5 +1,6 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, BooleanField, SubmitField
+from wtforms import StringField, PasswordField, BooleanField, SubmitField, SelectField
+from wtforms.fields.core import IntegerField
 from wtforms.validators import ValidationError, DataRequired, Email, EqualTo, Length, Required
 from app.models import User
 
@@ -38,3 +39,16 @@ class EditProfileForm(FlaskForm):
             user = User.query.filter_by(username=self.username.data).first()
             if user is not None:
                 raise ValidationError('Please use a different username.')
+
+class AccountForm(FlaskForm):
+    AccountName = StringField('Name your account:', validators=[
+        DataRequired(), Length(min=1, max=140)])
+    AccountBalance = IntegerField('Starting balance:')
+    AccountType = SelectField('Account Type:', choices=[("Standard Account", "Standard Account"), ("Gamer Account", "Gamer Account")])
+    submit = SubmitField('Submit')
+
+class EditAccountForm(FlaskForm):
+    AccountName = StringField('Name your account:', validators=[
+        DataRequired(), Length(min=1, max=140)])
+    AccountType = SelectField('Account Type:', choices=[("Standard Account", "Standard Account"), ("Gamer Account", "Gamer Account")])
+    submit = SubmitField('Submit')

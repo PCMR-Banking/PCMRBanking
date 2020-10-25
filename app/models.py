@@ -16,6 +16,7 @@ class User(UserMixin, db.Model):
     last_name = db.Column(db.String(50))
     cellphone = db.Column(db.String(12))
     last_seen = db.Column(db.DateTime, default=datetime.utcnow)
+    deleted = db.Column(db.Boolean(), default=False)
     otp_secret = db.Column(db.String(16))
 
     def __init__(self, **kwargs):
@@ -34,6 +35,10 @@ class User(UserMixin, db.Model):
     def check_password(self, passw):
         return check_password_hash(self.password, passw)
 
+    @login.user_loader
+    def load_user(id):
+        return User.query.get(int(id))
+
     def get_id(self):
            return (self.ID)
 
@@ -47,7 +52,10 @@ class User(UserMixin, db.Model):
             .format(self.username, self.otp_secret)
 
     def verify_totp(self, token):
-        return onetimepass.valid_totp(token, self.otp_secret)
+        return onetimepass.valid_totp(token, self.otp_secret, window=1)
+
+    def owner_accounts(self):
+        return Accounts.query.filter_by(self.ID)
 
 class Accounts(db.Model):
     ID = db.Column(db.Integer, primary_key=True)
@@ -56,6 +64,7 @@ class Accounts(db.Model):
     AccountBalance = db.Column(db.Integer, default=500)
     AccountName = db.Column(db.String(50), index=True, default='Standard Account')
     ownerID = db.Column(db.Integer, db.ForeignKey('user.ID'))
+    deleted = db.Column(db.Boolean(), default=False)
 
     def __repr__(self):
         return '<Accounts {}>'.format(self.AccountName)
