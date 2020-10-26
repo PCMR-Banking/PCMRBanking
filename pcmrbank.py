@@ -1,4 +1,4 @@
-from app import app, db
+from app import app, db, getApp
 from app.models import User, Accounts
 
 @app.shell_context_processor
