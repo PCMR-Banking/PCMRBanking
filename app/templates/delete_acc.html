@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="row mb-4">
+    <div class="col-2">
+      <h5 class="">Bank accounts:</h5>
+    </div>
+    <hr class="mt-2" style="color: black;">
+  </div>
+  
+  {% for a in accounts %}
+    <div class="row">
+      <p class="col-2">{{ a.ID }}</p>
+      <h5 class="col-5" style="font-style: italic;">{{ a.AccountName }}</h5>
+      <div class="col-5">
+        <p>{{ "{:,.2f} NOK".format(a.AccountBalance) }}</p>
+      </div>
+    </div>
+    {% if not loop.last %}
+      <hr>
+    {% endif %}
+  {% endfor %}
+    <hr>
+<form class="mt-5" role="form" id="deleteAcc" method="post">
+    <p>Are you sure you want to delete your account?</p>
+    <div class="mb-3">
+      <label for="accID" class="form-label">Confirm your deletion by typing in the BANK ACCOUNT ID associated with your account: </label>
+      <input type="number" class="form-control" id="accID" name="accID" aria-describedby="deleteAcchelp">
+      <div id="deleteAcchelp" class="form-text">By confirming your account will be deleted.</div>
+    </div>
+    <div class="mb-3 form-check">
+      <input type="checkbox" class="form-check-input" id="deleteCheck" name="deleteCheck">
+      <label class="form-check-label" for="deleteCheck">Delete this account</label>
+    </div>
+    <a type="button" class="btn btn-secondary" href="{{url_for('dashboard')}}">Cancel</a>
+    <button type="submit" form="deleteAcc" class="btn btn-danger">Confirm</button>
+</form>
+
+{% endblock %}

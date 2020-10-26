@@ -1,18 +1,34 @@
-from flask import render_template, flash, redirect, url_for, request, session, jsonify
+from flask import render_template, flash, redirect, url_for, request, session, jsonify, abort
 from flask_login.utils import logout_user
-from app import app, db
-from app.forms import LoginForm, RegistrationForm, EditProfileForm, AccountForm, EditAccountForm
+from app import app, db, mail, response
+from app.forms import LoginForm, RegistrationForm, EditProfileForm, AccountForm, EditAccountForm, ContactForm
 from flask_login import current_user, login_user, login_required
 from app.models import User, Accounts
 from werkzeug.urls import url_parse
 from datetime import datetime
 import pyqrcode
 from io import BytesIO, StringIO
-from os import abort
+from flask_mail import Message
+from app.email import send_email
+import re
+# from sendgrid import SendGridAPIClient
+# from sendgrid.helpers.mail import Mail
+# import os
+
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    app.config.update(
+    SESSION_COOKIE_SECURE=True,
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE='Lax',
+)
+    response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.set_cookie('username', 'flask', secure=True, httponly=True, samesite='Lax')
+    response.set_cookie('snakes', '3', max_age=300)
+    return render_template('index.html') and response
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -20,7 +36,8 @@ def login():
         return redirect(url_for('index'))
     form = LoginForm()
     if form.validate_on_submit():
-        user = User.query.filter_by(username=form.username.data).first()
+        email = form.username.data.lower()
+        user = User.query.filter_by(username=email).first()
         if user is None or not user.check_password(form.password.data) or \
             not user.verify_totp(form.token.data):
             flash('Invaild username, password or token')
@@ -37,6 +54,7 @@ def login():
 @app.route('/logout')
 def logout():
     logout_user()
+    session.clear()
     return redirect(url_for('index'))
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -45,12 +63,14 @@ def register():
         return redirect(url_for('index'))
     form = RegistrationForm()
     if form.validate_on_submit():
-        user = User.query.filter_by(username=form.username.data).first()
+        email = form.username.data.lower()
+        user = User.query.filter_by(username=email).first()
         if user is not None:
             flash('Username already exists.')
             return redirect(url_for('register'))
             
-        user = User(username=form.username.data)
+        email = form.username.data.lower()
+        user = User(username=email)
         user.set_password(form.password.data)
         db.session.add(user)
         db.session.commit()
@@ -60,28 +80,31 @@ def register():
         return redirect(url_for('two_factor_setup'))
     return render_template('register.html', title='Register', form=form)
 
-@app.route('/user')
+@app.route('/user', methods=['GET', 'POST'])
 @login_required
 def user():
-    user = current_user
+    user = User.query.get_or_404(current_user.ID)
+    if user.deleted:
+        abort(404)
+
+    if request.method == 'POST':
+        if request.form.get('deleteCheck'):
+            username = request.form['deleteEmail']
+            email = username.lower()
+            if user.username != email:
+                flash("Can't confirm the deletion...")
+                return redirect(url_for('user'))
+            else:
+                accounts = Accounts.query.filter_by(ownerID=user.ID).all()
+                for a in accounts:
+                    a.deleted = True
+                    db.session.add(a)
+                user.deleted = True
+                db.session.commit()
+                return redirect(url_for('logout'))
+
     return render_template('user.html', user=user)
 
-@app.route('/user', methods=['DELETE'])
-def delete_user(current_user):
-    user = User.query.get_or_404(current_user.ID)
-    accounts = Accounts.query.filter_by(ownerID=user.ID).all()
-    if user.deleted:
-        abort(404)
-    user.deleted = True
-    db.session.commit()
-    return '', 204
-
-@app.route('/user', methods=['GET'])
-def get_user(current_user):
-    user = User.query.get_or_404(current_user.ID)
-    if user.deleted:
-        abort(404)
-    return jsonify(user.to_dict())
 
 @app.before_request
 def before_request():
@@ -92,9 +115,8 @@ def before_request():
 @app.route('/edit_profile', methods=['GET', 'POST'])
 @login_required
 def edit_profile():
-    form = EditProfileForm(current_user.username)
+    form = EditProfileForm()
     if form.validate_on_submit():
-        current_user.username = form.username.data
         current_user.first_name = form.first_name.data
         current_user.last_name = form.last_name.data
         current_user.cellphone = form.cellphone.data
@@ -102,7 +124,6 @@ def edit_profile():
         flash('Your changes have been saved.')
         return redirect(url_for('edit_profile'))
     elif request.method == 'GET':
-        form.username.data = current_user.username
         form.first_name.data = current_user.first_name
         form.last_name.data = current_user.last_name
         form.cellphone.data = current_user.cellphone
@@ -117,6 +138,11 @@ def two_factor_setup():
     user = User.query.filter_by(username=session['username']).first()
     if user is None:
         return redirect(url_for('index'))
+
+    subject = "[Announcement] #{} - {}".format('Software update','(minor)')
+    receiver = session['username']
+    send_email(receiver, subject, 'two-factor-setup')
+
     # since this page contains the sensitive qrcode, make sure the browser
     # does not cache it
     return render_template('two-factor-setup.html'), 200, {
@@ -135,7 +161,7 @@ def qrcode():
 
     # for added security, remove username from session
     del session['username']
-
+    
     # render qrcode for FreeTOTP
     url = pyqrcode.create(user.get_totp_uri())
     stream = BytesIO()
@@ -154,9 +180,29 @@ def about():
 def credit():
     return render_template('Credit.html')
 
-@app.route('/contactus')
+@app.route('/contactus', methods=['GET', 'POST'])
 def contactus():
-    return render_template('/contactus.html')
+    form = ContactForm()
+
+    if request.method == 'POST':
+        if form.validate_on_submit() == False:
+            flash('All fields are required.')
+            return render_template('contactus.html', form=form)
+        else:
+            msg = Message('CONTACT US FORM FROM: ' + form.email1.data, sender='pcmrbank@gmail.com', recipients=['banking@vaehaaland.no'])
+            msg.body = """
+            From: %s 
+            Email: %s
+            Subject: %s
+            Message: %s
+            """ % (form.name1.data, form.email1.data, form.subject1.data, form.message1.data)
+            mail.send(msg)
+            
+    
+        return render_template('contactus.html', success=True)
+    
+    elif request.method == 'GET':
+        return render_template('contactus.html', form=form)
     
 @app.route('/stocks')
 def stocks():
@@ -175,29 +221,12 @@ def dashboard():
         db.session.add(account)
         db.session.commit()
         flash('Your new account is activated!')
-        accounts = Accounts.query.filter_by(ownerID=user.ID).all()
+        accounts = Accounts.query.filter_by(ownerID=user.ID).filter_by(deleted=False).all()
         return redirect(url_for('dashboard'))
-    # accounts = [
-    #     {
-    #         'ID': 13376942069,
-    #         'owner': {'username': 'alha@tester.no'},
-    #         'AccountName': 'Big Brain',
-    #         'AccountBalance': 500,
-    #         'AccountType': "Standard Account"
-    #     },
-    #     {
-    #         'ID': 13376942070,
-    #         'owner': {'username': 'alha@tester.no'},
-    #         'AccountName': 'Smol PP',
-    #         'AccountBalance': 500,
-    #         'AccountType': "Standard Account"
-    #     },
-    # ]
 
     if request.method == 'POST':
         if 'accID' in request.form:
             accID = int(request.form.get('accID'))
-            print(type(accID))
             accounts = Accounts.query.filter_by(ID=accID).first()
             session['editAccID'] = accID
             return redirect(url_for('edit_acc'))
@@ -205,37 +234,33 @@ def dashboard():
             fromAccID = int(request.form.get('from'))
             fromAccInfo = Accounts.query.filter_by(ID=fromAccID).first()
             Amount = int(request.form['money'])
+            if Amount is None:
+                abort(404)
             if fromAccInfo.AccountBalance < Amount:
-                flash("U don't have that cash man")
+                flash("Insufficient funds")
             else:
                 toAcc = request.form.get('toAcc')
-                toAccInfo = Accounts.query.filter_by(ID=toAcc).first()
+                toAccformat = re.sub('[^\w]', '', toAcc)
+                if toAccformat is None:
+                    abort(404)
+                toAccInfo = Accounts.query.filter_by(ID=toAccformat).first_or_404()
                 fromAccInfo.AccountBalance -= Amount
                 toAccInfo.AccountBalance += Amount
                 db.session.commit()
                 flash('Transfer successful!')
 
         return redirect(url_for('dashboard'))
-        # AccountName = request.form['AccountName']
-        # StartingAmount = request.form['money']
-        # AccountType = request.form.get('accounttypes')
-
-    accounts = Accounts.query.filter_by(ownerID=user.ID).all()
+    
+    accounts = Accounts.query.filter_by(ownerID=user.ID).filter_by(deleted=False).all()
     return render_template('dashboard.html', user=user, accounts=accounts, form=form)
 
-
-# @app.route('/edit_acc', methods=['GET', 'POST'])
-# @login_required
-# def edit_acc():
-#     user = current_user
 
 
 @app.route('/edit_acc', methods=['GET', 'POST'])
 @login_required
 def edit_acc():
     account = Accounts.query.filter_by(ID=session['editAccID']).first()
-    print(account.ID)
-    print(account.AccountName)
+    del session['editAccID']
     form = EditAccountForm()
     if form.validate_on_submit():
         account.AccountName = form.AccountName.data
@@ -249,27 +274,20 @@ def edit_acc():
     return render_template('edit_acc.html', title='Edit Account',
                            form=form)
 
+@app.route('/delete_acc', methods=['GET', 'POST'])
+@login_required
+def delete_acc():
+    user = current_user
+    if user is None or user.deleted:
+        abort(404)
+    accounts = Accounts.query.filter_by(ownerID=user.ID).filter_by(deleted=False).all()
+    if request.method == 'POST':
+        accID = int(request.form['accID'])
+        if request.form.get('deleteCheck'):
+            account = Accounts.query.filter_by(ID=accID).first()
+            account.deleted = True
+            db.session.commit()
+            return redirect(url_for('dashboard'))
+   
+    return render_template('delete_acc.html', title='Delete Account', accounts=accounts)
 
-
-# @app.route('/dashboard', methods=['GET', 'POST'])
-# @login_required
-# def index():
-#     form = PostForm()
-#     if form.validate_on_submit():
-#         account = Accounts(body=form.post.data, author=current_user)
-#         db.session.add(account)
-#         db.session.commit()
-#         flash('Your post is now live!')
-#         return redirect(url_for('index'))
-#     accounts = [
-#         {
-#             'author': {'username': 'alha@tester.no'},
-#             'body': 'Beautiful day in Portland!'
-#         },
-#         {
-#             'author': {'username': 'Susan'},
-#             'body': 'The Avengers movie was so cool!'
-#         }
-#     ]
-#     return render_template("dashboard.html", form=form,
-#                            accounts=accounts)

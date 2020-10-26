@@ -15,7 +15,7 @@ class User(UserMixin, db.Model):
     first_name = db.Column(db.String(50))
     last_name = db.Column(db.String(50))
     cellphone = db.Column(db.String(12))
-    last_seen = db.Column(db.DateTime, default=datetime.utcnow)
+    last_seen = db.Column(db.DateTime, default=datetime.utcnow())
     deleted = db.Column(db.Boolean(), default=False)
     otp_secret = db.Column(db.String(16))
 
@@ -59,7 +59,7 @@ class User(UserMixin, db.Model):
 
 class Accounts(db.Model):
     ID = db.Column(db.Integer, primary_key=True)
-    Created = db.Column(db.DateTime, default=datetime.utcnow)
+    Created = db.Column(db.DateTime, default=datetime.utcnow())
     AccountType = db.Column(db.String(25), default='Standard Account')
     AccountBalance = db.Column(db.Integer, default=500)
     AccountName = db.Column(db.String(50), index=True, default='Standard Account')

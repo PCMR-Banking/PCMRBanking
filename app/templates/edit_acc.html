@@ -1,23 +1,30 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h1 class="display-5">Edit Account</h1>
-    <form action="" method="post">
-        {{ form.hidden_tag() }}
-        <p>
-            {{ form.AccountName.label }}<br>
-            {{ form.AccountName(size=32) }}<br>
-            {% for error in form.AccountName.errors %}
-            <span style="color: red;">[{{ error }}]</span>
-            {% endfor %}
-        </p>
-        <p>
-            {{ form.AccountType.label }}<br>
-            {{ form.AccountType(size=1) }}<br>
-            {% for error in form.AccountType.errors %}
-            <span style="color: red;">[{{ error }}]</span>
-            {% endfor %}
-        </p>
-        <p>{{ form.submit() }}</p>
-    </form>
+    <h1 class="display-5 mb-1">Edit Account</h1>
+
+    <hr class="mb-5">
+
+    <div class="row justify-content-center ">
+        <div class="col-4">
+            <form action="" method="post">
+                {{ form.hidden_tag() }}
+                <p>
+                    {{ form.AccountName.label(class_="form-label") }}<br>
+                    {{ form.AccountName(class_="form-control") }}<br>
+                    {% for error in form.AccountName.errors %}
+                    <span style="color: red;">[{{ error }}]</span>
+                    {% endfor %}
+                </p>
+                <p>
+                    {{ form.AccountType.label(class_="form-label") }}<br>
+                    {{ form.AccountType(class_="form-control") }}<br>
+                    {% for error in form.AccountType.errors %}
+                    <span style="color: red;">[{{ error }}]</span>
+                    {% endfor %}
+                </p>
+                <p>{{ form.submit(class_="btn btn-primary") }}</p>
+            </form>
+        </div>
+    </div>
 {% endblock %}

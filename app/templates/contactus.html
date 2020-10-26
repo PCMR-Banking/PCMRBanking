@@ -1,11 +1,58 @@
 {% extends 'base.html' %}
+{% import "bootstrap/wtf.html" as wtf %}
 
 {% block header %}
   <h1 class="display-4 text-center mb-5">{% block title %}Contact us{% endblock %}</h1>
 {% endblock %}
 
 {% block content %}
+
+  {% if success %}
+      <p>Thank you for your message. We'll get back to you shortly.</p>
   
+    {% else %}
+    
+    {% for message in get_flashed_messages() %}
+      <div class="flash">{{ message }}</div>
+    {% endfor %}
+    <div class="row justify-content-center">
+      <div class="col-4">
+        <form action="" method=post>
+          {{ form.hidden_tag() }}
 
+          {{ form.name1.label(class_="form-label") }}
+          {{ form.name1(class_="form-control mb-3") }}
+          {% for error in form.name1.errors %}
+          <span style="color: red;">[{{ error }}]</span>
+          {% endfor %}
 
+          {{ form.email1.label(class_="form-label") }}
+          {{ form.email1(class_="form-control mb-3") }}
+          {% for error in form.email1.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+          {% endfor %}
+
+          {{ form.type1.label(class_="form-label") }}
+          {{ form.type1(class_="form-control mb-3") }}
+          {% for error in form.type1.errors %}
+          <span style="color: red;">[{{ error }}]</span>
+          {% endfor %}
+
+          {{ form.subject1.label(class_="form-label") }}
+          {{ form.subject1(class_="form-control mb-3") }}
+          {% for error in form.subject1.errors %}
+          <span style="color: red;">[{{ error }}]</span>
+          {% endfor %}
+
+          {{ form.message1.label(class_="form-label") }}
+          {{ form.message1(class_="form-control mb-3") }}
+          {% for error in form.message1.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+
+          {{ form.submit1(class_="btn btn-primary mt-3") }}
+        </form>
+      </div>
+  </div>
+  {% endif %}
 {% endblock %}
