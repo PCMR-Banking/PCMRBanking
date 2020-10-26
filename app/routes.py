@@ -165,7 +165,7 @@ def about():
 
 @app.route('/credit')
 def credit():
-    return render_template('Credit.html')
+    return render_template('credit.html')
 
 @app.route('/contactus', methods=['GET', 'POST'])
 def contactus():
