@@ -1,1 +1,1 @@
-web: python -c "from pcmrbank import init_db; init_db()"; gunicorn pcmrbank:app
+web: flask db upgrade; flask translate compile; gunicorn pcmrbank:app
