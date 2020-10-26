@@ -1,0 +1,1 @@
+web: python -c "from pcmrbank import init_db; init_db()"; gunicorn pcmrbank:apppip
