@@ -9,8 +9,6 @@ import os
 from flask_bootstrap import Bootstrap
 from flask_mail import Mail, Message
 from flask_moment import Moment
-import psycopg2
-import psycopg2.extras
 
 app = Flask(__name__)
 app.config.from_object(Config)
