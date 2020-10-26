@@ -130,10 +130,6 @@ def two_factor_setup():
     if user is None:
         return redirect(url_for('index'))
 
-    subject = "[Announcement] #{} - {}".format('Software update','(minor)')
-    receiver = session['username']
-    send_email(receiver, subject, 'two-factor-setup')
-
     # since this page contains the sensitive qrcode, make sure the browser
     # does not cache it
     return render_template('two-factor-setup.html'), 200, {

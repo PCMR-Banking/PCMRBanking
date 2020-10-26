@@ -9,6 +9,8 @@ import os
 from flask_bootstrap import Bootstrap
 from flask_mail import Mail, Message
 from flask_moment import Moment
+import psycopg2
+import psycopg2.extras
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -32,28 +34,6 @@ def getApp():
 # app.config["MAIL_USERNAME"] = 'apikey'
 # app.config["MAIL_PASSWORD"] = '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'
 # app.config["SENDGRID_API_KEY"] = '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'
-
-# DATABASE = os.environ['DATABASE_URL']
-
-# def get_db():
-#     db = getattr(g, '_database', None)
-#     if db is None:
-#         db = g._database = psycopg2.connect(DATABASE)
-#     return db
-
-# def init_db():
-#     with app.app_context():
-#         db = get_db()
-#         with app.open_resource('schema.sql', mode='r') as f:
-#             db.cursor().execute(f.read())
-#         db.commit()
-
-# def query_db(query, args=(), one=False):
-#     cur = get_db().cursor(cursor_factory=psycopg2.extras.DictCursor)
-#     cur.execute(query, args)
-#     rv = cur.fetchall()
-#     cur.close()
-#     return (rv[0] if rv else None) if one else rv
 
 app.config["MAIL_SERVER"] = "smtp.gmail.com"
 app.config["MAIL_PORT"] = 465
