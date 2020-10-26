@@ -25,6 +25,9 @@ response = Response()
 
 from app import routes, models, errors, email, decorators
 
+def getApp():
+    return app
+
 # app.config["MAIL_SERVER"] = "smtp.sendgrid.net"
 # app.config["MAIL_PORT"] = 465
 # app.config["MAIL_USE_SSL"] = True

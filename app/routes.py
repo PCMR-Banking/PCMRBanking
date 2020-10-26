@@ -18,17 +18,8 @@ import re
 
 @app.route('/')
 def index():
-    app.config.update(
-    SESSION_COOKIE_SECURE=True,
-    SESSION_COOKIE_HTTPONLY=True,
-    SESSION_COOKIE_SAMESITE='Lax',
-)
-    response.headers['X-Frame-Options'] = 'SAMEORIGIN'
-    response.headers['X-XSS-Protection'] = '1; mode=block'
-    response.headers['X-Content-Type-Options'] = 'nosniff'
-    response.set_cookie('username', 'flask', secure=True, httponly=True, samesite='Lax')
-    response.set_cookie('snakes', '3', max_age=300)
-    return render_template('index.html') and response
+    
+    return render_template('index.html')
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
