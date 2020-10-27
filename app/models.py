@@ -59,7 +59,7 @@ class User(UserMixin, db.Model):
         return Accounts.query.filter_by(self.ID)
 
 class Accounts(db.Model):
-    ID = db.Column(db.Integer, primary_key=True)
+    ID = db.Column(db.BigInteger, primary_key=True)
     Created = db.Column(db.DateTime, default=datetime.utcnow())
     AccountType = db.Column(db.String(25), default='Standard Account')
     AccountBalance = db.Column(db.Integer, default=500)
