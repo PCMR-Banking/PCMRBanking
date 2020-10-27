@@ -2,7 +2,7 @@ import os
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 class Config(object):
-    SECRET_KEY = os.environ.get('SECRET_KEY') or 'you-will-never-guess'
+    SECRET_KEY = os.environ.get('SECRET_KEY') or 'r{\xb3t\xb3-\x10\xab{2\x14d\x16K\xdb\xc2\xf8\xc4\xfd\x95\xac4-_'
 
     # SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
     #     'sqlite:///' + os.path.join(basedir, 'app.db')

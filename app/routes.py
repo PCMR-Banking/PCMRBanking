@@ -11,6 +11,7 @@ from io import BytesIO, StringIO
 from flask_mail import Message
 from app.email import send_email
 import re
+import random
 # from sendgrid import SendGridAPIClient
 # from sendgrid.helpers.mail import Mail
 # import os
@@ -60,15 +61,20 @@ def register():
             flash('Username already exists.')
             return redirect(url_for('register'))
             
-        email = form.username.data.lower()
-        user = User(username=email)
-        user.set_password(form.password.data)
-        db.session.add(user)
-        db.session.commit()
+        rand = random.randint(1, 999)
+        userIDrand = int(str(1337) + str(rand))
+        if User.query.get(userIDrand):
+            abort(404)
+        else:
+            email = form.username.data.lower()
+            user = User(ID=userIDrand, username=email)
+            user.set_password(form.password.data)
+            db.session.add(user)
+            db.session.commit()
 
-        # redirect to the two-factor auth page, passing username in session
-        session['username'] = user.username
-        return redirect(url_for('two_factor_setup'))
+            # redirect to the two-factor auth page, passing username in session
+            session['username'] = user.username
+            return redirect(url_for('two_factor_setup'))
     return render_template('register.html', title='Register', form=form)
 
 @app.route('/user', methods=['GET', 'POST'])
@@ -203,11 +209,16 @@ def dashboard():
         abort(404)
     form = AccountForm()
     if form.validate_on_submit():
-        account = Accounts(owner=current_user, AccountName=form.AccountName.data, AccountType=form.AccountType.data, \
+        rand = random.randint(10000, 99999)
+        bankaccID = int(str(133769) + str(rand))
+        if Accounts.query.get(bankaccID):
+            abort(404)
+        else:
+            account = Accounts(ID=bankaccID ,owner=current_user, AccountName=form.AccountName.data, AccountType=form.AccountType.data, \
             AccountBalance=form.AccountBalance.data)
-        db.session.add(account)
-        db.session.commit()
-        flash('Your new account is activated!')
+            db.session.add(account)
+            db.session.commit()
+            flash('Your new account is activated!')
         accounts = Accounts.query.filter_by(ownerID=user.ID).filter_by(deleted=False).all()
         return redirect(url_for('dashboard'))
 
